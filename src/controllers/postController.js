@@ -13,7 +13,7 @@ export const create = asyncHandler(async (req, res) => {
 })
 
 export const getAll = asyncHandler(async (req, res) => {
-    const posts = await getAllPosts();
+    const posts = await getAllPosts(req.query);
     return res.status(200).json({
         success: true,
         data: posts

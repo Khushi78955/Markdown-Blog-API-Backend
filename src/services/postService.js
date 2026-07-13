@@ -37,13 +37,44 @@ export const createPost = async (postData, userId) => {
 
 
 
-export const getAllPosts = async () => {
-    const result = await pool.query(
-        `SELECT id, title, slug, tags, reading_time_minutes, created_at
+export const getAllPosts = async (query) => {
+    const {search = "", tag, page = 1, limit = 10} = query;
+    const currentPage = Number(page);
+    const pageSize = Number(limit);
+    const offset = (currentPage - 1) * pageSize;
+    let sql = 
+    `
+        SELECT id, title, slug, tags, reading_time_minutes, created_at
         FROM posts
-        ORDER BY created_at DESC`
-    );
+        WHERE 1=1
+    `;
+    const values = [];
+    if(search){
+        values.push(`%${search}%`);
+        sql += `
+            AND (title ILIKE $${values.length} 
+            OR markdown_body ILIKE $${values.length})
+        `
+    }
+    if(tag){
+        values.push(tag.toLowerCase());
+        sql += `
+            AND $${values.length} = ANY(tags)
+        `
+    }
+    values.push(pageSize);
+    sql += `
+        ORDER BY created_at DESC 
+        LIMIT $${values.length}
+    `
+    values.push(offset);
+    sql += `
+        OFFSET $${values.length}
+    `
+
+    const result = await pool.query(sql, values);
     return result.rows;
+    
 }
 
 
