@@ -23,16 +23,17 @@ describe("Posts API", () => {
     });
 
     test("POST /posts should create a new post", async () => {
+        const title = `Learning Jest ${Date.now()}`;
         const response = await request(app)
             .post("/posts")
             .set("Authorization", `Bearer ${accessToken}`)
             .send({
-                title: "Learning Jest",
+                title,
                 markdownBody: "# Jest\n\nLearning backend testing.\n\n#testing #backend"
             });
         expect(response.statusCode).toBe(201);
         expect(response.body.success).toBe(true);
-        expect(response.body.data.title).toBe("Learning Jest");
+        expect(response.body.data.title).toBe(title);
     });
 
 
@@ -59,7 +60,7 @@ describe("Posts API", () => {
             .post("/posts")
             .set("Authorization", `Bearer ${accessToken}`)
             .send({
-                title: "Express Guide",
+                title: `Express Guide ${Date.now()}`,
                 markdownBody: "# Express\n\nExpress tutorial.\n\n#express"
             });
         const slug = createResponse.body.data.slug;
@@ -76,7 +77,7 @@ describe("Posts API", () => {
             .post("/posts")
             .set("Authorization", `Bearer ${accessToken}`)
             .send({
-                title: "Old Title",
+                title: `Old Title ${Date.now()}`,
                 markdownBody: "# Old\n\nOld body.\n\n#old"
             });
         const slug = createResponse.body.data.slug;
@@ -84,12 +85,13 @@ describe("Posts API", () => {
             .put(`/posts/${slug}`)
             .set("Authorization", `Bearer ${accessToken}`)
             .send({
-                title: "New Title",
+                title: `New Title ${Date.now()}`,
                 markdownBody: "# New\n\nUpdated body.\n\n#new"
             });
+        console.log(response.body);
         expect(response.statusCode).toBe(200);
         expect(response.body.success).toBe(true);
-        expect(response.body.data.title).toBe("New Title");
+        expect(response.body.data.title).toContain("New Title");
 
     });
 
@@ -109,5 +111,52 @@ describe("Posts API", () => {
         expect(response.statusCode).toBe(200);
         expect(response.body.success).toBe(true);
     });
+    
+
+    test("GET /posts should search posts by title", async () => {
+        await request(app)
+            .post("/posts")
+            .set("Authorization", `Bearer ${accessToken}`)
+            .send({
+                title: "Node Testing",
+                markdownBody: "# Node\n\nLearning Node.\n\n#node"
+            });
+        const response = await request(app)
+            .get("/posts?search=node");
+        expect(response.statusCode).toBe(200);
+        expect(response.body.success).toBe(true);
+        expect(response.body.data.length).toBeGreaterThan(0);
+    });
+
+
+    test("GET /posts should filter by tag", async () => {
+        await request(app)
+            .post("/posts")
+            .set("Authorization", `Bearer ${accessToken}`)
+            .send({
+                title: "Backend Guide",
+                markdownBody: "# Backend\n\nGuide.\n\n#backend"
+            });
+        const response = await request(app)
+            .get("/posts?tag=backend");
+        expect(response.statusCode).toBe(200);
+        expect(response.body.success).toBe(true);
+    });
+
+
+    test("GET /posts should paginate posts", async () => {
+        const response = await request(app)
+            .get("/posts?page=1&limit=2");
+        expect(response.statusCode).toBe(200);
+        expect(response.body.data.length).toBeLessThanOrEqual(2);
+    });
+
+    
+    test("GET /posts/:slug should return 404", async () => {
+        const response = await request(app)
+            .get("/posts/does-not-exist");
+        expect(response.statusCode).toBe(404);
+    });
+
 
 });
