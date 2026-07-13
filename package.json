@@ -22,6 +22,8 @@
     "helmet": "^8.3.0",
     "jsonwebtoken": "^9.0.3",
     "pg": "^8.22.0",
+    "swagger-ui-express": "^5.0.1",
+    "yamljs": "^0.3.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
@@ -29,4 +31,4 @@
     "nodemon": "^3.1.14",
     "supertest": "^7.2.2"
   }
-} 
+}

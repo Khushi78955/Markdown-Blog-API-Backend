@@ -1,3 +1,5 @@
+import swaggerUi from "swagger-ui-express";
+import YAML from "yamljs";
 import express from "express";
 import helmet from "helmet";
 import cors from "cors"
@@ -6,6 +8,7 @@ import errorHandler from "./middleware/errorHandler.js";
 import authRoutes from "./routes/authRoutes.js";
 import postRoutes from "./routes/postRoutes.js";
 
+const swaggerDocument = YAML.load("./docs/swagger.yaml");
 const app = express();
 
 app.use(helmet());
@@ -25,6 +28,12 @@ app.get("/", (req, res) => {
 
 app.use("/auth", authRoutes);
 app.use("/posts", postRoutes);
+
+app.use(
+    "/api-docs",
+    swaggerUi.serve,
+    swaggerUi.setup(swaggerDocument)
+);
 
 app.use((req, res) => {
     return res.status(404).json({
